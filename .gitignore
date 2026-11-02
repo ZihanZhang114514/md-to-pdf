@@ -1,0 +1,6 @@
+﻿# generated at build time
+scripts/out/
+scripts/.cache/
+# OS noise
+Thumbs.db
+.DS_Store
