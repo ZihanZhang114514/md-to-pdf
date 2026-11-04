@@ -29,7 +29,7 @@ Formulas are real vector typesetting (not screenshots), and the same `.md` alway
 | Need | Check |
 |---|---|
 | Node.js ≥ 18 | `node -v` |
-| Python 3 + `pymupdf` (page numbers, previews) | `python -c "import pymupdf"` — install with `pip install pymupdf -i https://pypi.tuna.tsinghua.edu.cn/simple` |
+| Python 3 + `pymupdf` (page numbers, previews) | `python -c "import pymupdf"` — install with `python3 -m pip install -r scripts/requirements.txt` |
 | Microsoft Edge or Google Chrome | `MD2PDF_EDGE` env var if not in a standard location |
 | 宋体 / 黑体 (SimSun / SimHei) | Windows built-in; on Linux swap the CSS font stack for Noto Sans CJK |
 | A Latin serif for English | Times/Liberation/DejaVu Serif — one of them is on every Windows/Linux box |
@@ -103,6 +103,7 @@ scripts/
   typst-template.typ      Chinese A4 report template for hosts without Chromium
   typst-template-en.typ   English A4 report template for the same hosts
   Drop-MD-Here.bat        drag-and-drop entry point
+  requirements.txt        Python deps of add_pageno.py / pdf_pages.py (pymupdf)
   package.json, node_modules/   vendored katex + markdown-it
 ```
 

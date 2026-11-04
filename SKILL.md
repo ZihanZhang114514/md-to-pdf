@@ -186,7 +186,7 @@ python3 -c "import pymupdf;d=pymupdf.open('/sdcard/报告.pdf');print(d.page_cou
 | 需要 | 检查 | 缺失时的补救 |
 |---|---|---|
 | Node ≥ 18 | `node -v` | 装 Node，或改用 Word/LibreOffice 路线 |
-| Python 3 + `pymupdf` | `python -c "import pymupdf"` | `pip install pymupdf -i https://pypi.tuna.tsinghua.edu.cn/simple` |
+| Python 3 + `pymupdf` | `python -c "import pymupdf"` | `python3 -m pip install -r scripts/requirements.txt`（PEP 668 环境加 `--break-system-packages`） |
 | Edge / Chrome | 脚本内置候选路径 | 设环境变量 `MD2PDF_EDGE` 指向可执行文件；**没有就改走 Typst**（「没有 Chromium 时」一节） |
 | 中文字体 | `fc-list :lang=zh` | Windows 自带宋体/黑体；Debian/Ubuntu 装 `fonts-noto-cjk`；Android 容器默认 0 字体，必装 |
 

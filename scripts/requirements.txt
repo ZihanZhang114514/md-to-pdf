@@ -1,0 +1,29 @@
+# Python dependencies for the scripts/ folder of md-to-pdf.
+#
+# Only the two helper scripts need Python:
+#   add_pageno.py   stamp page numbers with PyMuPDF (Windows route: md2pdf.ps1 calls it)
+#   pdf_pages.py    rasterise a PDF to PNG for visual verification
+# The conversion itself (md2pdf.js) is pure Node.js and needs no Python package.
+#
+# install:
+#   python3 -m pip install -r scripts/requirements.txt
+#   # Ubuntu 24.04 / Debian 12 hit PEP 668 (externally-managed-environment):
+#   python3 -m pip install --break-system-packages -r scripts/requirements.txt
+#   # or keep the system clean:
+#   python3 -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt
+#
+# mirrors (mainland China):
+#   -i https://pypi.tuna.tsinghua.edu.cn/simple
+#   -i https://mirrors.aliyun.com/pypi/simple
+
+# PyMuPDF: page numbering (insert_text / get_text_length), PDF -> PNG previews.
+# The scripts `import pymupdf`, an import name that only exists from 1.24.3 on
+# (older releases are imported as `fitz`), hence the lower bound.
+#
+# Staying on 1.x on purpose: it is a single self-contained wheel. PyMuPDF 2.x
+# also works (this skill was verified on 2.1) but from 2.0 it pulls in
+# pymupdf4llm and onnxruntime, i.e. hundreds of MB for features we never call.
+pymupdf>=1.24.3,<2
+
+# If you already have PyMuPDF 2.x installed, leave it alone:
+#   pymupdf>=2,<3

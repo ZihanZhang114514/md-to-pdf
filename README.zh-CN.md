@@ -28,7 +28,7 @@ markdown-it  →  KaTeX（公式预渲染成 HTML）  →  无头 Chromium 打�
 | 需要 | 检查 |
 |---|---|
 | Node.js ≥ 18 | `node -v` |
-| Python 3 + `pymupdf`（页码、预览） | `python -c "import pymupdf"`，装：`pip install pymupdf -i https://pypi.tuna.tsinghua.edu.cn/simple` |
+| Python 3 + `pymupdf`（页码、预览） | `python -c "import pymupdf"`，装：`python3 -m pip install -r scripts/requirements.txt` |
 | Microsoft Edge 或 Google Chrome | 不在默认路径就设 `MD2PDF_EDGE` |
 | 宋体 / 黑体（中文） | Windows 自带；Linux 换成 Noto Sans/Serif CJK |
 | 一个拉丁衬线体（英文） | Times / Liberation / DejaVu Serif 任选其一，各系统都有 |
@@ -94,6 +94,7 @@ scripts/
   add_pageno.py           PyMuPDF 补页码
   pdf_pages.py            PDF → PNG 用于校验
   Drop-MD-Here.bat        拖放入口
+  requirements.txt        Python 依赖（add_pageno.py / pdf_pages.py 用的 pymupdf）
   typst-template.typ      中文 A4 模板（给没有 Chromium 的机器）
   typst-template-en.typ   英文 A4 模板（同上）
   package.json, node_modules/   随包携带的 katex + markdown-it
