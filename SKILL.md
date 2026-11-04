@@ -4,9 +4,11 @@ description: Convert a Markdown file (Chinese or English, with LaTeX math) into 
 whenToUse: A .md file must become a PDF deliverable (report, note, handout), especially Chinese text with math formulas, and you want a reproducible conversion with no GUI app — on Windows with Edge, or on an Android / Linux container where no Chromium exists at all.
 ---
 
-# Markdown → PDF（离线、中文、公式）
+# Markdown → PDF（离线、中英双语、公式）
 
 一条命令把 `.md` 变成可交付的 A4 PDF：**markdown-it 解析 → KaTeX 预渲染公式 → 无头 Edge 打印 → PyMuPDF 补页码**。全程离线，不依赖 Word / LibreOffice / TeX；公式是真正的矢量排版，不是截图。
+
+**中英双语**：语言从正文自动判断（中文走 2em 首行缩进 + 宋体，English 走无缩进 + Times 系 + 自动断词），也可用 `MD2PDF_LANG=zh|en` 强制；判错了只影响排版风格，不影响内容。细节见「英文 Markdown」一节。
 
 本 skill 目录下的 `scripts/` 自带可直接运行的实现（含 `node_modules`，KaTeX 字体随包带上），照抄命令即可，不要重写一套。
 
@@ -69,6 +71,31 @@ p     text-indent 2em；公式块独立居中，page-break-inside: avoid
 12. **Word 路线补充**：中文必须显式设 `w:eastAsia` 字体；OMML 里字母自动斜体、数字直立，所以只需写 `<m:r><m:t>E</m:t></m:r>`；`\$Input` 之外的坑是 `xelatex` 之类 CLI 的 stderr 同样会被 PS 当成错误。
 13. **LibreOffice 免管理员**：`msiexec /a pkg.msi /qn TARGETDIR=D:\Tools\LibreOffice` 解包即用；`soffice --headless --convert-to pdf --outdir <dir> <file>`。首次运行要 30 s（建用户配置）；同一份 docx 的版面不如 Word。
 14. **不要为了"装齐"去装 4 GB 的 TeX**：MiKTeX basic + `--private` 就够，并且必须把包源改成清华 CTAN，否则首次编译会去连国外源。
+
+## 英文 Markdown（同一套命令，换一套排版风格）
+
+英文 `.md` 走同一条命令，不需要额外参数。语言从正文自动判断：**正文里中日韩字符 ≥ 20 个、且不少于字母数的一半** 才判为中文，否则按英文排版。判错了只影响字体/缩进/断词，不影响内容；要锁定就设 `MD2PDF_LANG=zh` 或 `MD2PDF_LANG=en`。
+
+| 项目 | 中文（zh） | 英文（en） |
+|---|---|---|
+| 正文 | `SimSun / 宋体` | `Times New Roman → Liberation Serif → DejaVu Serif` |
+| 标题 | `SimHei / 黑体` | `Helvetica Neue → Arial → DejaVu Sans` |
+| 首行缩进 | `2em` | `0`（英文报告惯例，靠段间距分节） |
+| 行距 | 1.72 | 1.72（一致） |
+| 断词 | 不需要 | `hyphens: auto` + `<html lang="en">`，否则两端对齐会出现「河」 |
+| 一段一行 | 默认开启（中文实验报告按行书写） | **关闭**，按标准 Markdown 合并软换行 |
+| 页码 | 9pt 居中 | 同 |
+
+> 英文文档的 `###` 层级会被保留；只有当整篇连一个 `##` 都没有（典型的扁平中文报告）时，才会把 `###` 降级成 `##`。
+
+Typst 路线另给了英文模板：`scripts/typst-template-en.typ`（DejaVu Serif + `lang: "en"` + 首行不缩进，A4/1.72 行距/页码与中文模板一致）。
+
+### 英文相关的新坑（接着上面编号）
+
+27. **默认的「一行一段」会把英文段落拆碎**。英文 `.md` 常把一句话软换行成几行，旧逻辑会把一段拆成四段（实测：一条 4 行的引言变成 4 个 `<p>`，句意断成碎片）。现在只有判为中文才开这个行为，英文按标准 Markdown 合并；要手工关用 `MD2PDF_LINE_ORIENTED=0`。
+28. **`###` 被统一降级成 `##` 会把英文文档的层级压平**。英文报告惯用 `## 1.` + `### 1.1`，旧逻辑把 1.1 抬到与 1. 同级。现在只在**整篇一个 `##` 都没有**时才降级（那是扁平中文报告的写法）。
+29. **英文两端对齐必须配断词**。缺 `hyphens: auto` 与 `lang="en"` 时，长单词撑开的空隙会形成明显的「白色河流」，比中文难看得多。
+30. **英文别照抄 2em 首行缩进**。中英混排若被判成中文，英文段落会缩进两个字，像排版错误；混排以中文为主时属正常，介意就 `MD2PDF_LANG=en` 强制。
 
 ## 没有 Chromium 时：Android / Linux 容器路线（实测通过）
 
@@ -147,6 +174,8 @@ python3 -c "import pymupdf;d=pymupdf.open('/sdcard/报告.pdf');print(d.page_cou
 ```
 
 看三样：**公式有没有变成源码文本**、**中文有没有豆腐块**、**标题是否被拆到页尾**（`page-break-after: avoid` 生效则不会）。检查页数是否与预期一致；超过 2 页时确认没有孤行。
+
+英文稿额外看两样：**段落有没有被拆碎**（一段变成一串短行）、**断词是否生效**（两端对齐的长行里是否出现明显白缝）。
 
 ## 交付
 
