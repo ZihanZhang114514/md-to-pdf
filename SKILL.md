@@ -1,7 +1,7 @@
 ---
 name: md-to-pdf
-description: Convert a Markdown file (Chinese or English, with LaTeX math) into a print-quality A4 PDF fully offline, without Microsoft Office, LibreOffice or a TeX distribution. Use when the user asks to turn a .md into a PDF, or when a report or note needs a PDF deliverable and an office suite cannot be assumed. Pipes markdown-it + KaTeX pre-rendered formulas into headless Chromium printing and stamps page numbers with PyMuPDF; also records the Word-COM, LibreOffice and XeLaTeX fallback routes and the layout pitfalls hit while building this pipeline.
-whenToUse: A .md file must become a PDF deliverable (report, note, handout), especially Chinese text with math formulas, and you want a reproducible one-command conversion with no GUI app.
+description: Convert a Markdown file (Chinese or English, with LaTeX math) into a print-quality A4 PDF fully offline, without Microsoft Office, LibreOffice or a TeX distribution. Use when the user asks to turn a .md into a PDF, or when a report or note needs a PDF deliverable and an office suite cannot be assumed. Pipes markdown-it + KaTeX pre-rendered formulas into headless Chromium printing and stamps page numbers with PyMuPDF; also records the Word-COM, LibreOffice, XeLaTeX and Typst fallback routes and the layout pitfalls hit while building this pipeline, including a complete no-Chromium route for Android / Linux containers (missing fonts, WeasyPrint's maths breakage, Typst leading/spacing/indent measurements).
+whenToUse: A .md file must become a PDF deliverable (report, note, handout), especially Chinese text with math formulas, and you want a reproducible conversion with no GUI app — on Windows with Edge, or on an Android / Linux container where no Chromium exists at all.
 ---
 
 # Markdown → PDF（离线、中文、公式）
@@ -24,6 +24,7 @@ whenToUse: A .md file must become a PDF deliverable (report, note, handout), esp
 | **Word COM**（`python-docx` → `ExportAsFixedFormat`） | 最好（宋体/黑体原生） | 好（OMML 原生公式，可编辑） | 装了 Office | 用户要 docx，或要 Word 级中文排版 |
 | **LibreOffice headless** | 良好 | 一般（OMML 间距偏紧、公式变 Math 对象） | LibreOffice | 无 Office 环境做 docx/xlsx/pptx → pdf |
 | **XeLaTeX + ctex** | 极好 | 极好（最专业） | 完整 TeX 发行版 | 学术排版、复杂数学 |
+| **Typst**（单文件二进制） | 极好（Noto CJK） | 极好（与 LaTeX 同级） | 一个 48 MB 静态可执行文件 | **没有 Chromium 的容器 / Android**，见「没有 Chromium 时」一节 |
 
 同一份中文报告实测：Word ≈ KaTeX > XeLaTeX(配置得当) > LibreOffice。**md 进、pdf 出，就走主路线**，别为了公式去装 4 GB 的 TeX。
 
@@ -69,6 +70,75 @@ p     text-indent 2em；公式块独立居中，page-break-inside: avoid
 13. **LibreOffice 免管理员**：`msiexec /a pkg.msi /qn TARGETDIR=D:\Tools\LibreOffice` 解包即用；`soffice --headless --convert-to pdf --outdir <dir> <file>`。首次运行要 30 s（建用户配置）；同一份 docx 的版面不如 Word。
 14. **不要为了"装齐"去装 4 GB 的 TeX**：MiKTeX basic + `--private` 就够，并且必须把包源改成清华 CTAN，否则首次编译会去连国外源。
 
+## 没有 Chromium 时：Android / Linux 容器路线（实测通过）
+
+> 场景：Agent 跑在 Android 手机的 Ubuntu 容器里（aarch64），**没有 Edge/Chrome 也装不上**。
+> 这条路线已完整跑通一次中文实验报告（A4 单页、8 个 `\( \)` 行内公式 + 1 个独立公式）。
+
+### 实测环境
+
+| 项目 | 值 |
+|---|---|
+| 容器 | Ubuntu 24.04.3 LTS / aarch64 |
+| Node / Python | 24.19.0 / 3.12.3（pip 26.2.1，PEP 668，`pip` 不在 PATH，只有 `python3 -m pip`） |
+| 浏览器 | **无** Edge / Chrome；`chromium-browser` 在 24.04 只是 snap 转发壳，容器内必失败 |
+| 系统字体 | **`fc-list` 输出 0 行**，一个字体都没有 |
+| 共享存储 | uid=0 直接读写 `/sdcard`（真挂载），产物落这里，手机文件管理器立刻可见 |
+| 结论 | 主路线不可用 → WeasyPrint 顶替失败 → **Typst 兜底成功** |
+
+### 三选一
+
+| 方案 | 结果 |
+|---|---|
+| 无头 Chromium | ❌ 装不上，别用 puppeteer / playwright 硬试 |
+| WeasyPrint 顶替 | ⚠️ 纯文本、表格可以；**含 `\frac` 的行内公式一定翻车**（坑 17） |
+| **Typst 兜底** | ✅ 一个静态二进制，数学排版与 LaTeX 同级，离线、可复现 |
+
+### 一条龙（照抄）
+
+```bash
+# 1) 中文字体：不装就是满屏豆腐块
+apt-get install -y --no-install-recommends fonts-noto-cjk fontconfig
+fc-list :lang=zh | head -3                  # 必须有输出
+
+# 2) Typst：musl 静态二进制，解压即用
+curl -sL -o /tmp/typst.tar.xz https://github.com/typst/typst/releases/latest/download/typst-aarch64-unknown-linux-musl.tar.xz
+python3 -c "import lzma,tarfile;tarfile.open('/tmp/typst.tar.xz').extractall('/tmp')"   # 容器常无 xz
+/tmp/typst-aarch64-unknown-linux-musl/typst --version
+/tmp/typst-aarch64-unknown-linux-musl/typst fonts | grep -i "cjk sc"
+
+# 3) 编译 + 校验
+/tmp/typst-aarch64-unknown-linux-musl/typst compile report.typ "/sdcard/报告.pdf"
+python3 -c "import pymupdf;d=pymupdf.open('/sdcard/报告.pdf');print(d.page_count);d[0].get_pixmap(dpi=150).save('/tmp/p1.png')"
+```
+
+模板：`scripts/typst-template.typ`。配方与上面的 CSS 版一一对应：
+
+| skill 配方（CSS） | Typst 写法 |
+|---|---|
+| `@page{size:A4;margin:…}` | `#set page(paper:"a4", margin:(top:2.4cm,bottom:2.2cm,left:2.6cm,right:2.5cm))` |
+| `12pt / line-height 1.72` | `#set text(size:12pt)` + `#set par(leading: 1em)`（坑 19） |
+| 宋体 / 黑体 | `font: ("Noto Serif CJK SC",)` / `("Noto Sans CJK SC", weight:"bold")` |
+| `p{text-indent:2em}` | 每段前 `#h(2em)`（坑 21） |
+| 页码 9pt 居中 | `#set page(footer: context{ set text(size:9pt); align(center, counter(page).display("1")) })` |
+| `page-break-after: avoid` | heading 的 `block(sticky: true)` |
+| 公式块不跨页 | `block(breakable: false)` |
+
+### 新增踩坑（接着上面编号）
+
+15. **系统零字体是第一个坑**。容器刚建好时 `fc-list` 输出 0 行，哪个引擎都是豆腐块。装 `fonts-noto-cjk` 就够，**别顺手装 `-extra`**（多几个 GB）；装完必须 `fc-list :lang=zh` 复核。
+16. **不要在容器里死磕 Chromium**。Ubuntu 24.04 的 `chromium-browser` 只是 snap 转发壳，容器内无 snapd；playwright 的 chromium 在受限容器里还常因沙箱起不来。直接跳到 Typst，省两小时。
+17. **WeasyPrint 顶替 Chromium 会坏在公式上**（实测）：MathJax 输出 `<svg width="30.6ex" height="5.3ex">`，宽度用 `ex`、基线靠 `vertical-align`；WeasyPrint 的 `ex` 换算口径与浏览器不同 —— 分式的矢量宽度被算小，**公式横向压住后面的正文**，还多出一条贯穿的分数线。调 CSS 救不回来，别试。
+18. **容器里 `tar` 解不开 `.tar.xz`**（`xz: Cannot exec`）。用 `python3 -c "import lzma,tarfile;tarfile.open(f).extractall(d)"`，不必为此改系统。
+19. **Typst 的 `leading` ≠ CSS `line-height`**。12pt 字体实测：`0.72em`→基线步进 17.39pt，`1.0em`→20.75pt，`1.2em`→23.15pt，即 `步进 = 字号×(1+leading) − 3.25pt`。要 1.72 倍就写 `leading: 1em`，别按 0.72 去凑。
+20. **Typst 的段间距不是接着行距算的**。实测段间基线距 = `8.75pt + spacing`，而段内行距是 20.7pt —— 所以默认 `spacing: 1.2em` 会给人「段比行还紧」的观感。中文报告用 `spacing: 1.55em` 才与 1.72 行距协调。
+21. **Typst 不给标题后的首段自动缩进**。`par(first-line-indent:)` 对紧跟标题的段落不生效（首段与正文左对齐，后面的段落才缩进）。最稳做法：关掉自动缩进，逐段手写 `#h(2em)`。注意 `#h(2em)` 后直接接中文会被当标识符，**必须保留 `(` `)` 调用形式**；别写 `#let ip = h(2em)` 再 `#ip牛顿…`（报 `unknown variable`）。
+22. **行内分式会被拆行**。`得 $R = r_k^2/(k\lambda)$` 曾在等号处断开成「得 R =」+「r_k²/(kλ)」。加 `#show math.equation.where(block: false): it => box(it)` 把行内公式整体成盒即可（这类公式都短，不会溢出）。
+23. **`enum` 两个默认值会咬人**：`body-indent: 0em` 让序号粘住正文（「1.仪器调节」，要 `0.4em`）；`spacing: 0em` 会让相邻条目**上下重叠**（要 `0.9em` 左右）。
+24. **全角括号开头的段落对不齐**：缩进全靠 `par(first-line-indent:)` 时，`（1）` 会左挂约 0.5em（实测 6pt）与其它段落错位；改用 `#h(2em)` 前置后，所有段落首字统一落在同一 x（实测 97.7pt）。
+25. **pip 撞 PEP 668**：Ubuntu 24.04 上 `pip install weasyprint` 会被 externally-managed 拦下，用 `python3 -m pip install --break-system-packages`，或直接建 venv。
+26. **产物与源同放 `/sdcard`**：容器 uid=0 直接写共享存储，中文文件名可用但脚本里一律加引号；校验用的 PNG 放 `/tmp`，别污染用户存储。
+
 ## 校验（必须做，别凭感觉交付）
 
 ```powershell
@@ -88,8 +158,8 @@ p     text-indent 2em；公式块独立居中，page-break-inside: avoid
 |---|---|---|
 | Node ≥ 18 | `node -v` | 装 Node，或改用 Word/LibreOffice 路线 |
 | Python 3 + `pymupdf` | `python -c "import pymupdf"` | `pip install pymupdf -i https://pypi.tuna.tsinghua.edu.cn/simple` |
-| Edge / Chrome | 脚本内置候选路径 | 设环境变量 `MD2PDF_EDGE` 指向可执行文件 |
-| 中文字体 | — | 宋体(SimSun)、黑体(SimHei) 为 Windows 自带；Linux 改 `Noto Sans CJK` |
+| Edge / Chrome | 脚本内置候选路径 | 设环境变量 `MD2PDF_EDGE` 指向可执行文件；**没有就改走 Typst**（「没有 Chromium 时」一节） |
+| 中文字体 | `fc-list :lang=zh` | Windows 自带宋体/黑体；Debian/Ubuntu 装 `fonts-noto-cjk`；Android 容器默认 0 字体，必装 |
 
 自检一条命令：`node <skill-dir>\scripts\md2pdf.js --selftest` 打印 Node/Edge/KaTeX 就绪情况。
 

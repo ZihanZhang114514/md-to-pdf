@@ -59,15 +59,22 @@ Inspect the result (rasterise pages to PNG for a visual check):
 python scripts/pdf_pages.py report.pdf preview 140
 ```
 
+> **No Chromium?** On an Android phone's Ubuntu container there is no Edge/Chrome
+> and snap cannot run; WeasyPrint is not a substitute either — its `ex`-unit maths
+> makes inline fractions overlap the body text. Use the bundled Typst fallback
+> instead: one 48 MB static binary, LaTeX-class maths, fully offline.
+> `typst compile scripts/typst-template.typ /sdcard/report.pdf` — see the "No Chromium" section of SKILL.md.
+
 ## Layout in this repo
 
 ```
-SKILL.md                  skill manifest + decision table + 14 hard-won pitfalls
+SKILL.md                  skill manifest + decision table + 26 hard-won pitfalls
 scripts/
   md2pdf.js               md → KaTeX → HTML → headless Chromium → PDF
   md2pdf.ps1              one-command wrapper, auto-detects node / python / browser
   add_pageno.py           PyMuPDF page numbers
   pdf_pages.py            PDF → PNG for visual verification
+  typst-template.typ      Chinese A4 report template for hosts without Chromium
   Drop-MD-Here.bat        drag-and-drop entry point
   package.json, node_modules/   vendored katex + markdown-it
 ```
@@ -97,6 +104,7 @@ A skill folder is discovered only as `<root>/<name>/SKILL.md` — nested manifes
 | Word COM (`python-docx` + OMML) | best | good (editable formulas) | user wants an editable `.docx` |
 | LibreOffice headless | fair | fair (OMML spacing degrades) | no Office, other formats → PDF |
 | XeLaTeX + ctex | excellent | excellent | academic typesetting, heavy install |
+| **Typst** (single static binary) | excellent (Noto CJK) | excellent | **no Chromium: Android / Linux container** |
 
 Measured on the same Chinese lab report: **Word ≈ KaTeX > XeLaTeX > LibreOffice**. Do not install a 4 GB TeX distribution just to print formulas.
 
