@@ -1,6 +1,7 @@
 ---
 name: md-to-pdf
 description: Convert a Markdown file (Chinese or English, with LaTeX math) into a print-quality A4 PDF fully offline, without Microsoft Office, LibreOffice or a TeX distribution. Use when the user asks to turn a .md into a PDF, or when a report or note needs a PDF deliverable and an office suite cannot be assumed. Pipes markdown-it + KaTeX pre-rendered formulas into headless Chromium printing and stamps page numbers with PyMuPDF; also records the Word-COM, LibreOffice, XeLaTeX and Typst fallback routes and the layout pitfalls hit while building this pipeline, including a complete no-Chromium route for Android / Linux containers (missing fonts, WeasyPrint's maths breakage, Typst leading/spacing/indent measurements).
+when_to_use: A .md file must become a PDF deliverable (report, note, handout), especially Chinese or English text with math formulas, and you want a reproducible conversion with no GUI app — on Windows/macOS/Linux with Edge or Chrome, or on a machine where no Chromium exists at all and the Typst fallback applies.
 whenToUse: A .md file must become a PDF deliverable (report, note, handout), especially Chinese text with math formulas, and you want a reproducible conversion with no GUI app — on Windows with Edge, or on an Android / Linux container where no Chromium exists at all.
 ---
 
@@ -100,6 +101,7 @@ Typst 路线另给了英文模板：`scripts/typst-template-en.typ`（DejaVu Ser
 ## 没有 Chromium 时：Android / Linux 容器路线（实测通过）
 
 > 场景：Agent 跑在 Android 手机的 Ubuntu 容器里（aarch64），**没有 Edge/Chrome 也装不上**。
+> 本节的 `/sdcard` 是 DSH-on-Android 的共享存储；换到别的宿主机就把这个路径替换成你自己的输出目录。
 > 这条路线已完整跑通一次中文实验报告（A4 单页、8 个 `\( \)` 行内公式 + 1 个独立公式）。
 
 ### 实测环境
@@ -179,7 +181,7 @@ python3 -c "import pymupdf;d=pymupdf.open('/sdcard/报告.pdf');print(d.page_cou
 
 ## 交付
 
-`present({"files":[{"path":"…\\报告.pdf"}]})`；同时说明用了哪条路线、页数、以及是否做了渲染校验。若用户还要编辑版，另给 docx。
+把产物路径直接交给用户：DSH 用 `present({"files":[…]})`，Claude Code / Codex 直接在回复里给出绝对路径即可。同时说明用了哪条路线、页数、以及是否做了渲染校验。若用户还要编辑版，另给 docx。
 
 ## 环境要求
 

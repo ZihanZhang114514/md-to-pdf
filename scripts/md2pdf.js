@@ -12,15 +12,57 @@ const { execFileSync } = require('child_process');
 const MarkdownIt = require('markdown-it');
 const katex = require('katex');
 
-const EDGE_CANDIDATES = [
+// Browsers we can drive. Windows paths first (the original platform), then the
+// macOS app-bundle paths, then the usual Linux binary locations; finally we scan
+// PATH so Nix/Homebrew/flatpak installs are found too.
+const BROWSER_CANDIDATES = [
   process.env.MD2PDF_EDGE,
+  // Windows
   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  // macOS
+  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  // Linux
+  '/usr/bin/google-chrome',
+  '/usr/bin/google-chrome-stable',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  '/snap/bin/chromium',
+  '/usr/bin/microsoft-edge',
+  '/usr/bin/microsoft-edge-stable',
 ].filter(Boolean);
 
-const findBrowser = () => EDGE_CANDIDATES.find((p) => fs.existsSync(p));
+const BROWSER_NAMES = [
+  'msedge', 'chrome', 'google-chrome', 'google-chrome-stable',
+  'chromium', 'chromium-browser', 'microsoft-edge', 'microsoft-edge-stable',
+];
+
+const findInPath = (name) => {
+  const exts = process.platform === 'win32' ? ['', '.exe'] : [''];
+  for (const dir of (process.env.PATH || '').split(path.delimiter).filter(Boolean)) {
+    for (const ext of exts) {
+      const candidate = path.join(dir, name + ext);
+      try {
+        if (fs.statSync(candidate).isFile()) return candidate;
+      } catch { /* not here */ }
+    }
+  }
+  return null;
+};
+
+const findBrowser = () => {
+  const direct = BROWSER_CANDIDATES.find((p) => fs.existsSync(p));
+  if (direct) return direct;
+  for (const name of BROWSER_NAMES) {
+    const hit = findInPath(name);
+    if (hit) return hit;
+  }
+  return null;
+};
 
 const banner = (msg) => console.log(msg);
 
@@ -29,7 +71,8 @@ if (process.argv[2] === '--selftest') {
   banner('node        : ' + process.version);
   banner('katex       : ' + katex.version);
   banner('markdown-it : ' + require('markdown-it/package.json').version);
-  banner('browser     : ' + (browser || 'NOT FOUND (set MD2PDF_EDGE)'));
+  banner('platform    : ' + process.platform + ' ' + process.arch);
+  banner('browser     : ' + (browser || 'NOT FOUND (MD2PDF_EDGE / PATH; else use the Typst templates)'));
   banner('fonts dir   : ' + path.join(__dirname, 'node_modules', 'katex', 'dist', 'fonts'));
   banner(browser ? 'READY' : 'NOT READY');
   process.exit(browser ? 0 : 1);
@@ -44,7 +87,12 @@ if (!inputMd || !outputPdf) {
 
 const browser = findBrowser();
 if (!browser) {
-  console.error('No Edge/Chrome found. Set MD2PDF_EDGE to the executable path.');
+  console.error('No Chromium-based browser found (Edge / Chrome / Chromium).');
+  console.error('  - checked: MD2PDF_EDGE, the standard Windows / macOS / Linux locations and $PATH');
+  console.error('  - fix one of:');
+  console.error('      MD2PDF_EDGE=/path/to/chrome node scripts/md2pdf.js in.md out.pdf');
+  console.error('      or compile with the Typst templates instead:');
+  console.error('      typst compile scripts/typst-template.typ out.pdf   (see SKILL.md "No Chromium")');
   process.exit(3);
 }
 

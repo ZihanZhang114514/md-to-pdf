@@ -124,6 +124,32 @@ customSkillDirs:
 
 A skill folder is discovered only as `<root>/<name>/SKILL.md` — nested manifest files are ignored.
 
+## Other agents (Claude Code, Codex)
+
+The repo follows the [Agent Skills](https://agentskills.io) open standard, so the same folder works in other harnesses — only the install path changes:
+
+| Host | Skill directory | Invoke |
+|---|---|---|
+| DSH | `~/.dsh/skills/md-to-pdf/` (or a root registered with `customSkillDirs`) | automatic |
+| Claude Code | `~/.claude/skills/md-to-pdf/` or `<repo>/.claude/skills/md-to-pdf/` | automatic, or `/md-to-pdf` |
+| Codex | `~/.agents/skills/md-to-pdf/` or `<repo>/.agents/skills/md-to-pdf/` | automatic, or `$md-to-pdf` |
+
+```bash
+# Claude Code, personal
+git clone https://github.com/ZihanZhang114514/md-to-pdf ~/.claude/skills/md-to-pdf
+
+# Codex, personal
+git clone https://github.com/ZihanZhang114514/md-to-pdf ~/.agents/skills/md-to-pdf
+```
+
+Things worth knowing before you point another agent at it:
+
+- **Browser lookup is cross-platform.** `md2pdf.js` checks `MD2PDF_EDGE`, the standard Windows/macOS/Linux install paths, then `$PATH`. If nothing is found it exits `3` with the Typst fallback spelled out — never a silent empty PDF.
+- **Windows-only helpers.** `md2pdf.ps1` and `Drop-MD-Here.bat` are Windows conveniences; on macOS/Linux call `node scripts/md2pdf.js` directly.
+- **No Chromium at all?** Use the Typst templates (see the section above); they need neither Node nor a browser.
+- **Frontmatter carries both keys.** `when_to_use` is the Agent Skills/Claude Code field, `whenToUse` is the DSH extension. Hosts ignore keys they don't know. Note that *uploading* to claude.ai or packaging with the Skills API is stricter — strip the DSH-only key first, or packaging fails with `Unexpected key(s) in SKILL.md frontmatter`.
+- **Delivery is host-specific.** The SKILL.md delivery step says "hand the PDF path to the user"; DSH spells that `present(...)`, other agents just print the absolute path.
+
 ## How it compares with the other engines
 
 | Engine | Chinese | Math | When |

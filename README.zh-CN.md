@@ -128,6 +128,32 @@ customSkillDirs:
 
 只有 `<根目录>/<名字>/SKILL.md` 这种结构会被发现，嵌套的清单文件会被忽略。
 
+## 其他 agent（Claude Code、Codex）
+
+本仓库遵循 [Agent Skills](https://agentskills.io) 开放标准，同一个目录换到别家也能用，差别只在装到哪：
+
+| 宿主 | 技能目录 | 调用 |
+|---|---|---|
+| DSH | `~/.dsh/skills/md-to-pdf/`（或用 `customSkillDirs` 注册的根目录） | 自动 |
+| Claude Code | `~/.claude/skills/md-to-pdf/` 或 `<仓库>/.claude/skills/md-to-pdf/` | 自动，或 `/md-to-pdf` |
+| Codex | `~/.agents/skills/md-to-pdf/` 或 `<仓库>/.agents/skills/md-to-pdf/` | 自动，或 `$md-to-pdf` |
+
+```bash
+# Claude Code（个人级）
+git clone https://github.com/ZihanZhang114514/md-to-pdf ~/.claude/skills/md-to-pdf
+
+# Codex（个人级）
+git clone https://github.com/ZihanZhang114514/md-to-pdf ~/.agents/skills/md-to-pdf
+```
+
+搬过去之前值得知道的几点：
+
+- **浏览器查找是跨平台的**：`md2pdf.js` 依次查 `MD2PDF_EDGE`、Windows/macOS/Linux 的标准安装路径、再扫 `$PATH`。一个都没找到时以退出码 3 结束，并明确提示改用 Typst，不会静默产出空 PDF。
+- **Windows 专属的两个包装**：`md2pdf.ps1` 和 `Drop-MD-Here.bat` 只在 Windows 有用，macOS/Linux 直接调 `node scripts/md2pdf.js`。
+- **完全没有 Chromium**：走 Typst 模板（见上一节），连 Node 都不需要。
+- **frontmatter 两个键并存**：`when_to_use` 是 Agent Skills / Claude Code 的规范字段，`whenToUse` 是 DSH 扩展；不认识的宿主会忽略多余键。但**上传到 claude.ai 或用 Skills API 打包时校验更严**，要先删掉 DSH 专属键，否则报 `Unexpected key(s) in SKILL.md frontmatter`。
+- **交付方式随宿主**：SKILL.md 里写的是「把 PDF 路径交给用户」，DSH 用 `present(...)`，其他 agent 直接给绝对路径即可。
+
 ## 和其他引擎对比
 
 | 引擎 | 中文 | 公式 | 何时用 |
