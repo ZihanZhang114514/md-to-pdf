@@ -66,16 +66,55 @@ const findBrowser = () => {
 
 const banner = (msg) => console.log(msg);
 
-if (process.argv[2] === '--selftest') {
+// ---- doctor: one command a buyer can run when something looks wrong ----
+const runQuiet = (cmd, args) => {
+  try {
+    const out = execFileSync(cmd, args, { stdio: ['ignore', 'pipe', 'ignore'], timeout: 15000 });
+    return { ok: true, out: String(out).trim() };
+  } catch {
+    return { ok: false, out: '' };
+  }
+};
+
+if (process.argv[2] === '--doctor' || process.argv[2] === '--selftest') {
   const browser = findBrowser();
-  banner('node        : ' + process.version);
-  banner('katex       : ' + katex.version);
-  banner('markdown-it : ' + require('markdown-it/package.json').version);
-  banner('platform    : ' + process.platform + ' ' + process.arch);
-  banner('browser     : ' + (browser || 'NOT FOUND (MD2PDF_EDGE / PATH; else use the Typst templates)'));
-  banner('fonts dir   : ' + path.join(__dirname, 'node_modules', 'katex', 'dist', 'fonts'));
-  banner(browser ? 'READY' : 'NOT READY');
-  process.exit(browser ? 0 : 1);
+  const nodeMajor = Number(process.versions.node.split('.')[0]);
+  const katexFonts = path.join(__dirname, 'node_modules', 'katex', 'dist', 'fonts');
+  const hasKatexFonts = fs.existsSync(katexFonts);
+
+  const pyCmd = ['python3', 'python'].find((c) => runQuiet(c, ['-c', 'import pymupdf']).ok);
+  const pyVer = pyCmd ? runQuiet(pyCmd, ['-c', 'import pymupdf;print(pymupdf.__version__)']).out : '';
+  const typstBin = findInPath('typst') || ['/usr/local/bin/typst', '/opt/homebrew/bin/typst'].find((p) => fs.existsSync(p));
+  const fc = runQuiet('fc-list', [':lang=zh']);
+  const cjkFaces = fc.ok ? fc.out.split('\n').filter(Boolean).length : null;
+
+  // [name, state, detail, blocking]
+  const rows = [
+    ['node', nodeMajor >= 18 ? 'ok' : 'too old', `${process.version} (need >= 18)`, nodeMajor >= 18],
+    ['katex fonts', hasKatexFonts ? 'ok' : 'missing', hasKatexFonts ? 'vendored' : 're-clone the repo, the fonts ship with it', hasKatexFonts],
+    ['browser', browser ? 'ok' : 'not found', browser || 'set MD2PDF_EDGE, install Chrome, or use the Typst templates', !!browser],
+    ['python + pymupdf', pyCmd ? 'ok' : 'optional', pyCmd ? `${pyCmd} / pymupdf ${pyVer}` : 'page numbers will be skipped; pip install -r scripts/requirements.txt', false],
+    ['typst (fallback)', typstBin ? 'available' : 'absent', typstBin || 'optional: needed only when there is no browser', false],
+    ['CJK fonts', cjkFaces ? 'ok' : 'unknown', cjkFaces ? `${cjkFaces} Chinese faces` : 'fc-list not available (normal on macOS/Windows)', false],
+    ['platform', 'info', `${process.platform} ${process.arch}`, false],
+  ];
+
+  const width = Math.max(...rows.map((r) => r[0].length));
+  const ready = nodeMajor >= 18 && hasKatexFonts && !!browser;
+  console.log('');
+  console.log('  md-to-pdf doctor');
+  console.log('  ' + '-'.repeat(56));
+  for (const [name, state, detail, blocking] of rows) {
+    const mark = blocking ? '+' : '-';
+    console.log(`  ${mark} ${name.padEnd(width)}  ${String(state).padEnd(10)} ${detail}`);
+  }
+  console.log('  ' + '-'.repeat(56));
+  console.log(ready
+    ? '  READY    node scripts/md2pdf.js in.md out.pdf'
+    : '  NOT READY   fix the lines above, then run this again');
+  if (!browser) console.log('  no browser?   typst compile scripts/typst-template.typ out.pdf');
+  console.log('');
+  process.exit(ready ? 0 : 1);
 }
 
 const [inputMd, outputPdf, titleArg, subtitleArg] = process.argv.slice(2);
@@ -165,12 +204,15 @@ const katexCss = fs.readFileSync(path.join(katexDist, 'katex.min.css'), 'utf8')
 // ---- 5. layout: one recipe, two typographic profiles ----
 // Chinese: SimSun/SimHei, 2em first-line indent, no hyphenation needed.
 // English: Times-family serif, no indent, justified with hyphenation enabled.
+// Ordered so the first hit wins on each OS: macOS ships Songti/PingFang,
+// Windows ships SimSun/SimHei, Linux usually has Noto CJK. A buyer on any of
+// the three should never see tofu.
 const bodyFont = isZh
-  ? '"SimSun","\u5b8b\u4f53",serif'
-  : '"Times New Roman","Liberation Serif","DejaVu Serif",Georgia,serif';
+  ? '"Songti SC","STSong","SimSun","\u5b8b\u4f53","Noto Serif CJK SC","Source Han Serif SC","Noto Serif SC",serif'
+  : '"Times New Roman","Liberation Serif","DejaVu Serif","Nimbus Roman",Georgia,serif';
 const headFont = isZh
-  ? '"SimHei","\u9ed1\u4f53",sans-serif'
-  : '"Helvetica Neue",Arial,"Segoe UI",Roboto,sans-serif';
+  ? '"PingFang SC","Hiragino Sans GB","Heiti SC","SimHei","\u9ed1\u4f53","Noto Sans CJK SC","Source Han Sans SC","Noto Sans SC",sans-serif'
+  : '"Helvetica Neue","Segoe UI",Arial,"Liberation Sans","DejaVu Sans",sans-serif';
 const paraIndent = isZh ? '2em' : '0';
 const h1Spacing = isZh ? '1px' : '0.2px';
 const hyphenCss = isZh ? '' : '  hyphens: auto;\n  -webkit-hyphens: auto;\n';

@@ -1,0 +1,9 @@
+interface:
+  display_name: "Markdown to PDF (English / 中文)"
+  short_description: "Turn a .md into a print-quality A4 PDF with real vector formulas, fully offline."
+  default_prompt: "Convert this markdown file to an A4 PDF and tell me the output path:"
+
+policy:
+  # Codex can pick this skill up from the task description alone; explicit
+  # "use md-to-pdf" or $md-to-pdf works too.
+  allow_implicit_invocation: true

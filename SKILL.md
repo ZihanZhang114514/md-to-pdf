@@ -2,6 +2,7 @@
 name: md-to-pdf
 description: Convert a Markdown file (Chinese or English, with LaTeX math) into a print-quality A4 PDF fully offline, without Microsoft Office, LibreOffice or a TeX distribution. Use when the user asks to turn a .md into a PDF, or when a report or note needs a PDF deliverable and an office suite cannot be assumed. Pipes markdown-it + KaTeX pre-rendered formulas into headless Chromium printing and stamps page numbers with PyMuPDF; also records the Word-COM, LibreOffice, XeLaTeX and Typst fallback routes and the layout pitfalls hit while building this pipeline, including a complete no-Chromium route for Android / Linux containers (missing fonts, WeasyPrint's maths breakage, Typst leading/spacing/indent measurements).
 when_to_use: A .md file must become a PDF deliverable (report, note, handout), especially Chinese or English text with math formulas, and you want a reproducible conversion with no GUI app — on Windows/macOS/Linux with Edge or Chrome, or on a machine where no Chromium exists at all and the Typst fallback applies.
+allowed-tools: Bash(node *) Bash(python3 *) Bash(typst *)
 whenToUse: A .md file must become a PDF deliverable (report, note, handout), especially Chinese text with math formulas, and you want a reproducible conversion with no GUI app — on Windows with Edge, or on an Android / Linux container where no Chromium exists at all.
 ---
 
@@ -12,6 +13,15 @@ whenToUse: A .md file must become a PDF deliverable (report, note, handout), esp
 **中英双语**：语言从正文自动判断（中文走 2em 首行缩进 + 宋体，English 走无缩进 + Times 系 + 自动断词），也可用 `MD2PDF_LANG=zh|en` 强制；判错了只影响排版风格，不影响内容。细节见「英文 Markdown」一节。
 
 本 skill 目录下的 `scripts/` 自带可直接运行的实现（含 `node_modules`，KaTeX 字体随包带上），照抄命令即可，不要重写一套。
+
+## 装好后先跑这两条（30 秒）
+
+```bash
+./install.sh                      # 链进 ~/.claude/skills 与 ~/.agents/skills；有 ~/.dsh 时一并装
+node scripts/md2pdf.js --doctor   # 自检：node / 浏览器 / python+pymupdf / 中文字体
+```
+
+Windows 用 `.\install.ps1`。doctor 里只有带 `+` 的三行是硬条件（node、katex 字体、浏览器），其余是提示。没有浏览器就走 Typst 模板，不需要 Node 也不需要 Chromium。
 
 ## 适合 / 不适合
 
@@ -44,7 +54,9 @@ whenToUse: A .md file must become a PDF deliverable (report, note, handout), esp
 
 最省事的入口：把 `.md` 拖到 `<skill-dir>\scripts\Drop-MD-Here.bat` 上，同目录生成同名 PDF（标题取文件名）。
 
-只想渲染不补页码：`node <skill-dir>\scripts\md2pdf.js <in.md> <out.pdf> [标题] [副标题]`。
+只想渲染不补页码：`node <skill-dir>\scripts\md2pdf.js <in.md> <out.pdf> [标题] [副标题]`
+
+macOS / Linux 用 `scripts/md2pdf.sh <in.md> <out.pdf> ["标题"]`：自己找 node、跑完再补页码；`MD2PDF_NO_PAGES=1` 可跳过页码。。
 
 ## 排版配方（中文 A4 报告）
 

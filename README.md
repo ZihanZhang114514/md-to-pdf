@@ -12,6 +12,8 @@ markdown-it  →  KaTeX (pre-rendered to HTML)  →  headless Chromium print  �
 
 Formulas are real vector typesetting (not screenshots), and the same `.md` always produces the same `.pdf`.
 
+**New here? → [QUICKSTART.md](QUICKSTART.md)** (install, self-check, three commands, troubleshooting).
+
 ---
 
 ## Features
@@ -36,13 +38,25 @@ Formulas are real vector typesetting (not screenshots), and the same `.md` alway
 
 ## Quick start
 
+```bash
+./install.sh                      # Claude Code + Codex (+ DSH when ~/.dsh exists)
+node scripts/md2pdf.js --doctor   # node / browser / python / CJK fonts, one table
+```
+
 ```powershell
 # Windows PowerShell
+.\install.ps1
 & ".\scripts\md2pdf.ps1" `
     -InputPath  "D:\work\report.md" `
     -OutputPath "D:\work\report.pdf" `
     -Title      "报告标题" `
     -Subtitle   "实 验 报 告"
+```
+
+macOS / Linux one-liner with page numbers:
+
+```sh
+./scripts/md2pdf.sh report.md report.pdf "Report title"
 ```
 
 Or drag any `.md` onto `scripts\Drop-MD-Here.bat` — the PDF appears next to the source file.
@@ -94,9 +108,14 @@ python scripts/pdf_pages.py report.pdf preview 140
 ## Layout in this repo
 
 ```
+QUICKSTART.md             buyer-facing: install, doctor, three commands, troubleshooting
+install.sh / install.ps1  install into ~/.claude/skills and ~/.agents/skills
+LICENSE                   MIT
+agents/openai.yaml        Codex metadata (display name, implicit-invocation policy)
 SKILL.md                  skill manifest + decision table + 30 hard-won pitfalls
 scripts/
-  md2pdf.js               md → KaTeX → HTML → headless Chromium → PDF
+  md2pdf.js               md → KaTeX → HTML → headless Chromium → PDF (+ --doctor)
+  md2pdf.sh               macOS / Linux entry point: finds node, then stamps page numbers
   md2pdf.ps1              one-command wrapper, auto-detects node / python / browser
   add_pageno.py           PyMuPDF page numbers
   pdf_pages.py            PDF → PNG for visual verification

@@ -10,6 +10,8 @@ markdown-it  →  KaTeX（公式预渲染成 HTML）  →  无头 Chromium 打�
 
 公式是真正的矢量排版（不是截图），同一份 `.md` 反复出同一份 `.pdf`。
 
+**第一次用？看 [QUICKSTART.md](QUICKSTART.md)**（安装、自检、三条命令、故障表）。
+
 **排版语言自动判断**：同一个命令，中文走宋体 + 2 字首行缩进，英文走 Times 系 + 不缩进 + 自动断词。
 
 ---
@@ -35,6 +37,11 @@ markdown-it  →  KaTeX（公式预渲染成 HTML）  →  无头 Chromium 打�
 
 ## 快速上手
 
+```bash
+./install.sh                      # 装进 Claude Code + Codex（有 ~/.dsh 时也装）
+node scripts/md2pdf.js --doctor   # 一张表看清 node / 浏览器 / python / 中文字体
+```
+
 ```powershell
 # Windows PowerShell
 & ".\scripts\md2pdf.ps1" `
@@ -42,6 +49,12 @@ markdown-it  →  KaTeX（公式预渲染成 HTML）  →  无头 Chromium 打�
     -OutputPath "D:\work\report.pdf" `
     -Title      "报告标题" `
     -Subtitle   "实 验 报 告"
+```
+
+macOS / Linux 一行命令（自动补页码）：
+
+```sh
+./scripts/md2pdf.sh report.md report.pdf "报告标题"
 ```
 
 或者把任意 `.md` 拖到 `scripts\Drop-MD-Here.bat` 上，PDF 生成在源文件旁边。
@@ -87,9 +100,14 @@ python scripts/pdf_pages.py report.pdf preview 140
 ## 仓库结构
 
 ```
+QUICKSTART.md             买家向：安装、自检、三条命令、故障排查
+install.sh / install.ps1  装进 ~/.claude/skills 与 ~/.agents/skills
+LICENSE                   MIT
+agents/openai.yaml        Codex 元数据（显示名、隐式调用策略）
 SKILL.md                  技能清单 + 选型表 + 30 条实测坑
 scripts/
-  md2pdf.js               md → KaTeX → HTML → 无头 Chromium → PDF
+  md2pdf.js               md → KaTeX → HTML → 无头 Chromium → PDF（含 --doctor）
+  md2pdf.sh               macOS / Linux 入口：自己找 node，跑完补页码
   md2pdf.ps1              一键封装，自动找 node / python / 浏览器
   add_pageno.py           PyMuPDF 补页码
   pdf_pages.py            PDF → PNG 用于校验
