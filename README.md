@@ -105,6 +105,25 @@ python scripts/pdf_pages.py report.pdf preview 140
 > instead: one 48 MB static binary, LaTeX-class maths, fully offline.
 > `typst compile scripts/typst-template.typ /sdcard/report.pdf` — see the "No Chromium" section of SKILL.md.
 
+## Examples
+
+Both files in `examples/` were rendered by this repo — page numbers included, nothing retouched:
+
+| Chinese lab report — A4, 2 pages | English lab note — A4, 2 pages |
+|---|---|
+| ![Chinese lab report, page 1](docs/img/zh-report-page1.png) | ![English lab note, page 1](docs/img/en-note-page1.png) |
+
+![Chinese report, page 2: wide data table, code block, display math](docs/img/zh-report-page2.png)
+
+```bash
+node scripts/md2pdf.js examples/zh-report.md out.pdf "牛顿环法测量平凸透镜曲率半径" "大学物理实验报告"
+python scripts/add_pageno.py out.pdf
+```
+
+The committed PDFs are the exact output of those two sources, and `tests/test_md2pdf.py` asserts their page geometry, extractable text, embedded fonts and stamped page numbers — a layout regression fails `python -m unittest` instead of shipping.
+
+**Math delimiters:** `\( … \)` inline, `\[ … \]` display. `$…$` is *not* rendered: the build prints a warning naming the span, because silently emitting `$E=mc^2$` as text is worse than saying so.
+
 ## Layout in this repo
 
 ```
@@ -113,6 +132,9 @@ install.sh / install.ps1  install into ~/.claude/skills and ~/.agents/skills
 LICENSE                   MIT
 agents/openai.yaml        Codex metadata (display name, implicit-invocation policy)
 SKILL.md                  skill manifest + decision table + 30 hard-won pitfalls
+examples/                 two A4 reports (source .md + the exact rendered PDF)
+tests/                    unittest suite: page geometry, fonts, page numbers, CLI regressions
+docs/img/                 the screenshots used in this README
 scripts/
   md2pdf.js               md → KaTeX → HTML → headless Chromium → PDF (+ --doctor)
   md2pdf.sh               macOS / Linux entry point: finds node, then stamps page numbers

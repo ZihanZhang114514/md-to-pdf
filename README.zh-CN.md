@@ -97,6 +97,25 @@ node scripts/md2pdf.js --selftest
 python scripts/pdf_pages.py report.pdf preview 140
 ```
 
+## 效果示例
+
+`examples/` 里的两份文档都由本仓库渲染，页码也是真的补上去的，没有后期处理：
+
+| 中文实验报告（A4，2 页） | 英文实验笔记（A4，2 页） |
+|---|---|
+| ![中文实验报告第 1 页](docs/img/zh-report-page1.png) | ![英文实验笔记第 1 页](docs/img/en-note-page1.png) |
+
+![中文报告第 2 页：宽表格、代码块、行间公式](docs/img/zh-report-page2.png)
+
+```bash
+node scripts/md2pdf.js examples/zh-report.md out.pdf "牛顿环法测量平凸透镜曲率半径" "大学物理实验报告"
+python scripts/add_pageno.py out.pdf
+```
+
+仓库里的 PDF 就是这两份源文件的真实产物；`tests/test_md2pdf.py` 会断言它们的页面尺寸、可提取文本、字体嵌入和页码，排版回退会让 `python -m unittest` 失败，而不是被发出去。
+
+**公式定界符**：行内 `\( … \)`，行间 `\[ … \]`。`$…$` **不渲染**——构建时会打印一行警告并指出是哪一段，因为把 `$E=mc^2$` 当正文印出来比说明白更糟。
+
 ## 仓库结构
 
 ```
@@ -105,6 +124,9 @@ install.sh / install.ps1  装进 ~/.claude/skills 与 ~/.agents/skills
 LICENSE                   MIT
 agents/openai.yaml        Codex 元数据（显示名、隐式调用策略）
 SKILL.md                  技能清单 + 选型表 + 30 条实测坑
+examples/                 两份 A4 示例（源 .md + 渲染出的 PDF 原件）
+tests/                    unittest：页面尺寸、字体、页码、CLI 回归
+docs/img/                 本 README 用到的截图
 scripts/
   md2pdf.js               md → KaTeX → HTML → 无头 Chromium → PDF（含 --doctor）
   md2pdf.sh               macOS / Linux 入口：自己找 node，跑完补页码
