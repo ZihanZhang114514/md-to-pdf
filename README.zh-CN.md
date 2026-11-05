@@ -1,4 +1,4 @@
-# md-to-pdf
+﻿# md-to-pdf
 
 [English](README.md)
 
@@ -121,7 +121,7 @@ python scripts/add_pageno.py out.pdf
 ```
 QUICKSTART.md             买家向：安装、自检、三条命令、故障排查
 install.sh / install.ps1  装进 ~/.claude/skills 与 ~/.agents/skills
-LICENSE                   MIT
+LICENSE                   AGPL-3.0
 agents/openai.yaml        Codex 元数据（显示名、隐式调用策略）
 SKILL.md                  技能清单 + 选型表 + 30 条实测坑
 examples/                 两份 A4 示例（源 .md + 渲染出的 PDF 原件）
@@ -209,3 +209,11 @@ git clone https://github.com/ZihanZhang114514/md-to-pdf ~/.agents/skills/md-to-p
 ## 已知问题
 
 见 [SKILL.md](SKILL.md) 的「踩坑清单」30 条，包括：为什么公式要在 markdown 解析**之前**抽出、独立公式为什么要用独占一段的占位符、为什么 PowerShell 参数不能叫 `$Input`、无头 Chromium 的 stderr 为什么会让严格的脚本中断、英文段落为什么会被拆碎，以及没有 Chromium 的机器上该用什么。
+
+## 许可证
+
+**AGPL-3.0-or-later**，见 [LICENSE](LICENSE)。
+
+页码那一步（scripts/add_pageno.py）用的 [PyMuPDF](https://github.com/pymupdf/PyMuPDF) 是 AGPL-3.0，一个依赖它却自称 MIT 的仓库是不诚实的，所以整份作品采用同一许可。随包携带的 scripts/node_modules 保留各自的 MIT 许可（KaTeX、markdown-it）。
+
+实际含义：商用、修改、塞进自己的产品都可以；但如果你**分发**了修改版，或把它作为网络服务对外提供，源码就要保持开放。如果 AGPL 对你是硬阻塞：Artifex 提供 PyMuPDF 商业授权，而 dd_pageno.py 只有 40 行，换成 pypdf 并不难。

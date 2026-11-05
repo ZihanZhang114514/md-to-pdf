@@ -1,6 +1,7 @@
 ﻿{
   "name": "md-to-pdf-skill",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "version": "1.0.0",
   "description": "Offline Markdown -> PDF (KaTeX + headless Chromium + PyMuPDF page numbers)",
   "dependencies": {

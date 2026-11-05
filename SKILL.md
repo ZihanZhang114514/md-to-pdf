@@ -1,7 +1,8 @@
----
+﻿---
 name: md-to-pdf
 description: Convert a Markdown file (Chinese or English, with LaTeX math) into a print-quality A4 PDF fully offline, without Microsoft Office, LibreOffice or a TeX distribution. Use when the user asks to turn a .md into a PDF, or when a report or note needs a PDF deliverable and an office suite cannot be assumed. Pipes markdown-it + KaTeX pre-rendered formulas into headless Chromium printing and stamps page numbers with PyMuPDF; also records the Word-COM, LibreOffice, XeLaTeX and Typst fallback routes and the layout pitfalls hit while building this pipeline, including a complete no-Chromium route for Android / Linux containers (missing fonts, WeasyPrint's maths breakage, Typst leading/spacing/indent measurements).
 when_to_use: A .md file must become a PDF deliverable (report, note, handout), especially Chinese or English text with math formulas, and you want a reproducible conversion with no GUI app — on Windows/macOS/Linux with Edge or Chrome, or on a machine where no Chromium exists at all and the Typst fallback applies.
+license: AGPL-3.0-or-later
 allowed-tools: Bash(node *) Bash(python3 *) Bash(typst *)
 whenToUse: A .md file must become a PDF deliverable (report, note, handout), especially Chinese text with math formulas, and you want a reproducible conversion with no GUI app — on Windows with Edge, or on an Android / Linux container where no Chromium exists at all.
 ---

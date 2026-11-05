@@ -1,4 +1,4 @@
-# md-to-pdf
+﻿# md-to-pdf
 
 [中文说明](README.zh-CN.md)
 
@@ -129,7 +129,7 @@ The committed PDFs are the exact output of those two sources, and `tests/test_md
 ```
 QUICKSTART.md             buyer-facing: install, doctor, three commands, troubleshooting
 install.sh / install.ps1  install into ~/.claude/skills and ~/.agents/skills
-LICENSE                   MIT
+LICENSE                   AGPL-3.0
 agents/openai.yaml        Codex metadata (display name, implicit-invocation policy)
 SKILL.md                  skill manifest + decision table + 30 hard-won pitfalls
 examples/                 two A4 reports (source .md + the exact rendered PDF)
@@ -206,3 +206,11 @@ Measured on the same Chinese lab report: **Word ≈ KaTeX > XeLaTeX > LibreOffic
 ## Gotchas
 
 See the "踩坑清单" section of [SKILL.md](SKILL.md) — including why math must be extracted *before* markdown parsing, why display equations need a standalone placeholder, why `$Input`/`$Output` must never be PowerShell parameter names, and why headless Chromium's stderr output kills a strict PowerShell script, why the line-oriented layout shreds English paragraphs, and why `###` must not be demoted in a document that already has real heading levels.
+
+## License
+
+**AGPL-3.0-or-later** — see [LICENSE](LICENSE).
+
+The page-number step (scripts/add_pageno.py) uses [PyMuPDF](https://github.com/pymupdf/PyMuPDF), which is AGPL-3.0; a repository that requires it cannot honestly call itself MIT, so the whole work carries the same licence. The vendored scripts/node_modules keep their own MIT licences (KaTeX, markdown-it).
+
+In practice: use it commercially, modify it, put it inside your own product. If you distribute a modified version — or run a modified version as a network service — the source stays open. If AGPL is a blocker for you, Artifex sells commercial PyMuPDF licences, and dd_pageno.py is 40 lines, so a pypdf replacement is straightforward.

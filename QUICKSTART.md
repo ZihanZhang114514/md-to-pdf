@@ -1,4 +1,4 @@
-# Quick start (5 minutes, no GUI)
+﻿# Quick start (5 minutes, no GUI)
 
 You bought / cloned a skill that turns a Markdown file into a **print-quality A4 PDF** — Chinese or English, LaTeX formulas included — with **no** Word, no LibreOffice, no TeX, no internet.
 
@@ -88,4 +88,4 @@ More: `SKILL.md` (the agent's manual) and `README.md`.
 
 ## License
 
-MIT — see `LICENSE`. Use it commercially, modify it, ship it inside your own product.
+AGPL-3.0-or-later — see `LICENSE`. Use it commercially, modify it, ship it inside your own product; if you **distribute a modified version** (or run one as a network service), the source stays open. That licence is inherited from PyMuPDF, the page-number dependency.

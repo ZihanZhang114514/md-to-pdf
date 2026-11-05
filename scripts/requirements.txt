@@ -27,3 +27,8 @@ pymupdf>=1.24.3,<2
 
 # If you already have PyMuPDF 2.x installed, leave it alone:
 #   pymupdf>=2,<3
+
+# LICENSE: PyMuPDF is AGPL-3.0 (Artifex), not MIT, and the page-number step
+# cannot run without it — which is why this repository is AGPL-3.0-or-later
+# rather than MIT. Need a permissive dependency? Drop this one and rewrite
+# add_pageno.py against pypdf (BSD); it is 40 lines.
