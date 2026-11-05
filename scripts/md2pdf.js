@@ -158,6 +158,25 @@ const langEnv = (process.env.MD2PDF_LANG || '').toLowerCase();
 const lang = langEnv === 'zh' || langEnv === 'en' ? langEnv : detectLang(md);
 const isZh = lang === 'zh';
 
+// ---- 0b. fenced code blocks are opaque: hide them before the math extraction,
+//          heading normalisation and line-oriented layout, restore them after.
+//          Without this, the Chinese line-oriented pass inserts a blank line
+//          between every code line and `^### ` inside a fence gets demoted ----
+const fences = [];
+md = md.replace(/^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*\1[ \t]*$/gm, (m) => {
+  fences.push(m);
+  return `\n\nZZFENCE${fences.length - 1}ZZFENCE\n\n`;
+});
+
+// ---- 0c. $...$ is the most common inline-math spelling in the world and this
+//          build does not render it; say so instead of printing it literally ----
+const dollarSpans = (md.match(/\$[^$\n]{1,120}?\$/g) || [])
+  .filter((s) => /[\\^_{}=]/.test(s.slice(1, -1)));
+if (dollarSpans.length) {
+  console.log(`warning: ${dollarSpans.length} $...$ span(s) left as literal text — ` +
+    'this build renders math only with \\( ... \\) and \\[ ... \\]');
+}
+
 // ---- 1. extract math BEFORE markdown parsing ----
 const inline = [];
 const display = [];
@@ -184,6 +203,9 @@ if (isZh && process.env.MD2PDF_LINE_ORIENTED !== '0') {
     return block.split('\n').map((r) => r.trim()).filter(Boolean).join('\n\n');
   }).join('\n\n');
 }
+
+// ---- 2c. restore the fenced blocks hidden in 0b ----
+md = md.replace(/ZZFENCE(\d+)ZZFENCE/g, (_m, n) => fences[Number(n)]);
 
 // ---- 3. markdown -> html ----
 const mdi = new MarkdownIt({ html: false, linkify: false, typographer: false });
@@ -249,8 +271,19 @@ ${body}
 
 const htmlPath = path.join(OUTDIR, 'doc.html');
 fs.writeFileSync(htmlPath, html, 'utf8');
-if (fs.existsSync(outputPdf)) fs.rmSync(outputPdf);
+
+// Chromium resolves --print-to-pdf against its own working directory, so a
+// relative output path used to produce no file at all while still printing
+// "PDF -> ...". Always hand the browser an absolute path, and fail loudly if
+// nothing landed on disk.
+const outputPdfAbs = path.resolve(outputPdf);
+fs.mkdirSync(path.dirname(outputPdfAbs), { recursive: true });
+if (fs.existsSync(outputPdfAbs)) fs.rmSync(outputPdfAbs);
 execFileSync(browser, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-pdf-header-footer',
-  `--print-to-pdf=${outputPdf}`, 'file:///' + htmlPath.replace(/\\/g, '/')],
+  `--print-to-pdf=${outputPdfAbs}`, 'file:///' + htmlPath.replace(/\\/g, '/')],
   { stdio: 'ignore', timeout: 180000 });
-console.log(`PDF -> ${outputPdf}  (lang: ${lang})`);
+if (!fs.existsSync(outputPdfAbs)) {
+  console.error(`error: the browser exited without writing ${outputPdfAbs}`);
+  process.exit(4);
+}
+console.log(`PDF -> ${outputPdfAbs}  (lang: ${lang})`);
