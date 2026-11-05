@@ -1,4 +1,4 @@
-﻿# Quick start (5 minutes, no GUI)
+# Quick start (5 minutes, no GUI)
 
 You bought / cloned a skill that turns a Markdown file into a **print-quality A4 PDF** — Chinese or English, LaTeX formulas included — with **no** Word, no LibreOffice, no TeX, no internet.
 

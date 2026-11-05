@@ -1,4 +1,4 @@
-﻿# md-to-pdf
+# md-to-pdf
 
 [中文说明](README.zh-CN.md)
 
@@ -11,6 +11,8 @@ markdown-it  →  KaTeX (pre-rendered to HTML)  →  headless Chromium print  �
 ```
 
 Formulas are real vector typesetting (not screenshots), and the same `.md` always produces the same `.pdf`.
+
+**No Node, no browser?** `agensi/` holds a single-file edition (2 text files, Typst backend) for marketplaces that deliver skills as text and run them from a temporary file — see [`agensi/README.md`](agensi/README.md).
 
 **Before you install — what it needs on your machine:** Node.js ≥ 18, one of Microsoft Edge / Google Chrome to print with, Python 3 + `pymupdf` for the page numbers, and a CJK font (built into Windows; `fonts-noto-cjk` on Linux). No Chromium at all? There is a Typst route that needs neither Node nor a browser — see [No Chromium](#no-chromium).
 
@@ -138,6 +140,7 @@ examples/                 two A4 reports (source .md + the exact rendered PDF)
 tests/                    unittest suite: page geometry, fonts, page numbers, CLI regressions
 references/               gotchas.md (32 measured traps) + no-chromium.md (Typst route)
 docs/                    screenshots (docs/img) + store-listing.md
+agensi/                  single-file marketplace edition: SKILL.md + md2pdf.py (Typst backend)
 scripts/
   md2pdf.js               md → KaTeX → HTML → headless Chromium → PDF (+ --doctor)
   md2pdf.sh               macOS / Linux entry point: finds node, then stamps page numbers

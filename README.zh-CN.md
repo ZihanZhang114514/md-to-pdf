@@ -1,4 +1,4 @@
-﻿# md-to-pdf
+# md-to-pdf
 
 [English](README.md)
 
@@ -9,6 +9,8 @@ markdown-it  →  KaTeX（公式预渲染成 HTML）  →  无头 Chromium 打�
 ```
 
 公式是真正的矢量排版（不是截图），同一份 `.md` 反复出同一份 `.pdf`。
+
+**没有 Node、没有浏览器？** `agensi/` 是单文件版（2 个文本文件，Typst 后端），给那些只分发文本、且从临时文件里执行脚本的技能市场用——见 [`agensi/README.md`](agensi/README.md)。
 
 **装之前先看它需要什么**：Node.js ≥ 18、Microsoft Edge 或 Google Chrome（用来打印）、Python 3 + `pymupdf`（补页码）、一个中文字体（Windows 自带；Linux 装 `fonts-noto-cjk`）。完全没有 Chromium 也行——有一条既不要 Node 也不要浏览器的 Typst 路线，见下文。
 
@@ -130,6 +132,7 @@ examples/                 两份 A4 示例（源 .md + 渲染出的 PDF 原件�
 tests/                    unittest：页面尺寸、字体、页码、CLI 回归
 references/               踩坑清单 32 条（gotchas.md）+ 无 Chromium 路线（no-chromium.md）
 docs/                    截图（docs/img）+ 商店文案（store-listing.md）
+agensi/                  单文件市场版：SKILL.md + md2pdf.py（Typst 后端）
 scripts/
   md2pdf.js               md → KaTeX → HTML → 无头 Chromium → PDF（含 --doctor）
   md2pdf.sh               macOS / Linux 入口：自己找 node，跑完补页码

@@ -1,4 +1,4 @@
-﻿# Store listing copy (Agensi / Gumroad / Ko-fi)
+# Store listing copy (Agensi / Gumroad / Ko-fi)
 
 Paste-ready English copy. The same text works on any marketplace that shows a
 title, a short line, a long description and screenshots.
@@ -7,6 +7,26 @@ title, a short line, a long description and screenshots.
 single-purpose skills at $3–9 and "skills with scripts, references and a
 thorough README" at $12–25; this sits at the bottom of that band because it has no
 social proof yet (0 stars) — raise it after the first ten sales.
+
+## What actually ships on a skill marketplace
+
+A skill marketplace (Agensi included) delivers **text over an MCP connection** and
+runs a script from a temporary file: binaries are listed but never served, and a
+listing must stay under 200 text files / 6M characters. The root pipeline needs 369
+files and 120 font binaries, so the artifact to list is **`agensi/`** — two text
+files (`SKILL.md`, `md2pdf.py`) and one external tool:
+
+| Listed artifact (`agensi/`) | Requires | Engine |
+|---|---|---|
+| 2 files, ~35 KB, no binaries | `python3` + `typst` (one static binary, ~30 MB) | Typst |
+
+That changes the prerequisites the page must state, and the price: **$5–7**, not
+$9. The repository edition (Node + Chromium, KaTeX, 14 tests) stays on GitHub and
+is what the screenshots come from — but do not promise a browser-free install on
+a listing that ships `agensi/`, and do not promise the reverse either.
+
+Reproduce the listing screenshots from the single-file edition first if you want
+the page to be strictly honest: `python agensi/md2pdf.py examples/zh-report.md out.pdf`.
 
 **Screenshots, in this order** (all already in `docs/img/`):
 

@@ -1,6 +1,8 @@
 # generated at build time
 scripts/out/
 scripts/.cache/
+# scratch renders of the single-file edition
+agensi/_*
 # python bytecode (tests/)
 __pycache__/
 *.py[cod]
