@@ -2,13 +2,15 @@
 
 [English](README.md)
 
-一个 **DSH skill**：把 Markdown 变成可交付的 A4 打印级 PDF —— **中文、英文都行**，公式也在。全程离线，不需要 Microsoft Office、LibreOffice 或 LaTeX。
+一个 **Agent Skill**（Claude Code、Codex、Cursor，也支持 DSH）：把 Markdown 变成可交付的 A4 打印级 PDF —— **中文、英文都行**，公式也在。全程离线，不需要 Microsoft Office、LibreOffice 或 LaTeX。
 
 ```
 markdown-it  →  KaTeX（公式预渲染成 HTML）  →  无头 Chromium 打印  →  PyMuPDF 补页码
 ```
 
 公式是真正的矢量排版（不是截图），同一份 `.md` 反复出同一份 `.pdf`。
+
+**装之前先看它需要什么**：Node.js ≥ 18、Microsoft Edge 或 Google Chrome（用来打印）、Python 3 + `pymupdf`（补页码）、一个中文字体（Windows 自带；Linux 装 `fonts-noto-cjk`）。完全没有 Chromium 也行——有一条既不要 Node 也不要浏览器的 Typst 路线，见下文。
 
 **第一次用？看 [QUICKSTART.md](QUICKSTART.md)**（安装、自检、三条命令、故障表）。
 
@@ -123,10 +125,11 @@ QUICKSTART.md             买家向：安装、自检、三条命令、故障排
 install.sh / install.ps1  装进 ~/.claude/skills 与 ~/.agents/skills
 LICENSE                   AGPL-3.0
 agents/openai.yaml        Codex 元数据（显示名、隐式调用策略）
-SKILL.md                  技能清单 + 选型表 + 30 条实测坑
+SKILL.md                  技能清单：命令、排版配方、环境要求
 examples/                 两份 A4 示例（源 .md + 渲染出的 PDF 原件）
 tests/                    unittest：页面尺寸、字体、页码、CLI 回归
-docs/img/                 本 README 用到的截图
+references/               踩坑清单 32 条（gotchas.md）+ 无 Chromium 路线（no-chromium.md）
+docs/                    截图（docs/img）+ 商店文案（store-listing.md）
 scripts/
   md2pdf.js               md → KaTeX → HTML → 无头 Chromium → PDF（含 --doctor）
   md2pdf.sh               macOS / Linux 入口：自己找 node，跑完补页码
@@ -208,7 +211,7 @@ git clone https://github.com/ZihanZhang114514/md-to-pdf ~/.agents/skills/md-to-p
 
 ## 已知问题
 
-见 [SKILL.md](SKILL.md) 的「踩坑清单」30 条，包括：为什么公式要在 markdown 解析**之前**抽出、独立公式为什么要用独占一段的占位符、为什么 PowerShell 参数不能叫 `$Input`、无头 Chromium 的 stderr 为什么会让严格的脚本中断、英文段落为什么会被拆碎，以及没有 Chromium 的机器上该用什么。
+见 [references/gotchas.md](references/gotchas.md) 的 32 条实测记录，包括：为什么公式要在 markdown 解析**之前**抽出、独立公式为什么要用独占一段的占位符、为什么 PowerShell 参数不能叫 `$Input`、无头 Chromium 的 stderr 为什么会让严格的脚本中断、英文段落为什么会被拆碎，以及没有 Chromium 的机器上该用什么。
 
 ## 许可证
 

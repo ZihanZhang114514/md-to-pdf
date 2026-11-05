@@ -2,7 +2,7 @@
 
 [中文说明](README.zh-CN.md)
 
-A **DSH skill** that turns a Markdown file — **Chinese or English**, LaTeX math and all — into a print-quality A4 PDF **fully offline**, without Microsoft Office, LibreOffice or a TeX distribution.
+An **Agent Skill** (Claude Code, Codex, Cursor — and DSH) that turns a Markdown file — **Chinese or English**, LaTeX math and all — into a print-quality A4 PDF **fully offline**, without Microsoft Office, LibreOffice or a TeX distribution.
 
 The layout language is detected from the text itself, so the same command typesets both languages correctly: Chinese gets 宋体 with 2-character first-line indent, English gets a Times-family serif, no indent and automatic hyphenation.
 
@@ -11,6 +11,8 @@ markdown-it  →  KaTeX (pre-rendered to HTML)  →  headless Chromium print  �
 ```
 
 Formulas are real vector typesetting (not screenshots), and the same `.md` always produces the same `.pdf`.
+
+**Before you install — what it needs on your machine:** Node.js ≥ 18, one of Microsoft Edge / Google Chrome to print with, Python 3 + `pymupdf` for the page numbers, and a CJK font (built into Windows; `fonts-noto-cjk` on Linux). No Chromium at all? There is a Typst route that needs neither Node nor a browser — see [No Chromium](#no-chromium).
 
 **New here? → [QUICKSTART.md](QUICKSTART.md)** (install, self-check, three commands, troubleshooting).
 
@@ -131,10 +133,11 @@ QUICKSTART.md             buyer-facing: install, doctor, three commands, trouble
 install.sh / install.ps1  install into ~/.claude/skills and ~/.agents/skills
 LICENSE                   AGPL-3.0
 agents/openai.yaml        Codex metadata (display name, implicit-invocation policy)
-SKILL.md                  skill manifest + decision table + 30 hard-won pitfalls
+SKILL.md                  skill manifest: commands, layout recipe, requirements
 examples/                 two A4 reports (source .md + the exact rendered PDF)
 tests/                    unittest suite: page geometry, fonts, page numbers, CLI regressions
-docs/img/                 the screenshots used in this README
+references/               gotchas.md (32 measured traps) + no-chromium.md (Typst route)
+docs/                    screenshots (docs/img) + store-listing.md
 scripts/
   md2pdf.js               md → KaTeX → HTML → headless Chromium → PDF (+ --doctor)
   md2pdf.sh               macOS / Linux entry point: finds node, then stamps page numbers
@@ -205,7 +208,7 @@ Measured on the same Chinese lab report: **Word ≈ KaTeX > XeLaTeX > LibreOffic
 
 ## Gotchas
 
-See the "踩坑清单" section of [SKILL.md](SKILL.md) — including why math must be extracted *before* markdown parsing, why display equations need a standalone placeholder, why `$Input`/`$Output` must never be PowerShell parameter names, and why headless Chromium's stderr output kills a strict PowerShell script, why the line-oriented layout shreds English paragraphs, and why `###` must not be demoted in a document that already has real heading levels.
+See [`references/gotchas.md`](references/gotchas.md) — 32 measured entries, including why math must be extracted *before* markdown parsing, why display equations need a standalone placeholder, why fences must be hidden from the line-oriented layout, why the output path must be absolute, why `$Input`/`$Output` must never be PowerShell parameter names, and why `###` must not be demoted in a document that already has real heading levels.
 
 ## License
 

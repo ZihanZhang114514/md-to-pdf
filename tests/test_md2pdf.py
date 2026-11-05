@@ -151,5 +151,48 @@ class CliTests(unittest.TestCase):
             self.assertIn("1 $...$ span(s)", out, "currency '$5' must not be counted")
 
 
+class ManifestTests(unittest.TestCase):
+    """The SKILL.md frontmatter is what a marketplace validator (and claude.ai
+    packaging) checks, so the spec's key set and limits are asserted here."""
+
+    ALLOWED = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
+
+    @classmethod
+    def setUpClass(cls):
+        with open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8") as fh:
+            text = fh.read()
+        cls.text = text
+        assert text.startswith("---"), "SKILL.md has no frontmatter"
+        end = text.find("\n---", 3)
+        cls.frontmatter = {}
+        for line in text[3:end].strip("\n").splitlines():
+            if not line.strip() or line.startswith(" "):
+                continue  # nested metadata values are checked by prefix
+            key, _, value = line.partition(":")
+            cls.frontmatter[key.strip()] = value.strip()
+
+    def test_only_spec_keys(self):
+        extra = set(self.frontmatter) - self.ALLOWED
+        self.assertFalse(extra, f"non-spec frontmatter keys: {extra} (put extras under metadata:)")
+
+    def test_name_and_limits(self):
+        import re
+        self.assertRegex(self.frontmatter["name"], r"^[a-z0-9]+(-[a-z0-9]+)*$")
+        self.assertLessEqual(len(self.frontmatter["name"]), 64)
+        self.assertLessEqual(len(self.frontmatter["description"]), 1024)
+        self.assertLessEqual(len(self.frontmatter.get("compatibility", "")), 500)
+        self.assertTrue(self.frontmatter.get("license", "").startswith("AGPL-3.0"))
+
+    def test_referenced_files_exist(self):
+        import re
+        for rel in re.findall(r"\((references/[^)]+)\)", self.text):
+            self.assertTrue(os.path.isfile(os.path.join(ROOT, rel)), rel)
+
+    def test_body_stays_small(self):
+        # Progressive disclosure: the manifest is loaded on every trigger, the
+        # traps live in references/ and are read only when needed.
+        self.assertLess(len(self.text), 9000, "SKILL.md grew back into a manual")
+
+
 if __name__ == "__main__":
     unittest.main()
