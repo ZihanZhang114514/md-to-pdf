@@ -34,6 +34,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 
 CJK_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
 
@@ -146,7 +147,28 @@ def run_typst(binary: str, args: list[str], timeout: int = 180) -> subprocess.Co
                           encoding="utf-8", errors="replace", timeout=timeout)
 
 
+def _cache_dir() -> str:
+    return os.path.join(os.path.expanduser("~"), ".cache", "md2pdf")
+
+
 def installed_fonts(binary: str) -> list[str]:
+    """`typst fonts` enumerates hundreds of families and costs about a second;
+    the answer only changes when the binary or the font set does, so cache it
+    per typst version and refresh when the cache is a day old."""
+    try:
+        version = run_typst(binary, ["--version"], timeout=60).stdout.strip().split()[1]
+    except Exception:
+        version = "0"
+    cache = os.path.join(_cache_dir(), f"fonts-{version}.txt")
+    try:
+        age = time.time() - os.path.getmtime(cache)
+        if age < 86400:
+            with open(cache, encoding="utf-8") as fh:
+                names = [ln.strip() for ln in fh if ln.strip()]
+            if names:
+                return names
+    except OSError:
+        pass
     try:
         proc = run_typst(binary, ["fonts"], timeout=120)
     except (OSError, subprocess.SubprocessError):
@@ -160,6 +182,12 @@ def installed_fonts(binary: str) -> list[str]:
             continue
         # `typst fonts` prints "Family" and, for variable fonts, "Family (variable)"
         names.append(re.sub(r"\s*\((?:variable|variable, .*)\)$", "", line))
+    try:
+        os.makedirs(_cache_dir(), exist_ok=True)
+        with open(cache, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(names))
+    except OSError:
+        pass
     return names
 
 
@@ -365,6 +393,7 @@ class Renderer:
     def __init__(self, lang: str, tex: TexConverter) -> None:
         self.lang = lang
         self.tex = tex
+        self.images = 0
 
     def inline(self, s: str) -> str:
         """Escape literal text and map emphasis / code / links to Typst."""
@@ -376,6 +405,13 @@ class Renderer:
 
         # A placeholder may already be present (math, restored later); keep it.
         s = PLACEHOLDER.sub(lambda m: hold("\x00" + m.group(1) + m.group(2) + "\x00"), s)
+
+        # ![alt](src) is not supported; a literal "!alt text" would be worse
+        # than a visible marker, so replace it and count it for the warning.
+        def _image(m: re.Match) -> str:
+            self.images += 1
+            return hold(f"[image: {m.group(1) or m.group(2)}]")
+        s = re.sub(r"!\[([^\]]*)\]\(([^)]*)\)", _image, s)
 
         pattern = re.compile(
             r"`([^`\n]+)`"                       # inline code
@@ -605,7 +641,7 @@ def detect_lang(text: str) -> str:
 
 
 def build_document(md: str, title: str, subtitle: str, lang: str,
-                   fonts: dict[str, str]) -> tuple[str, TexConverter]:
+                   fonts: dict[str, str]) -> tuple[str, TexConverter, int]:
     tex = TexConverter()
     render = Renderer(lang, tex)
     indent = "#h(2em)" if lang == "zh" else ""
@@ -644,7 +680,7 @@ def build_document(md: str, title: str, subtitle: str, lang: str,
         title_block += "#v(14pt)\n"
 
     doc = head + "\n" + title_block + "\n" + body + "\n"
-    return doc, tex
+    return doc, tex, render.images
 
 
 # ----------------------------------------------------------------------- CLI
@@ -723,12 +759,12 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return 3
 
-    with open(args.input, encoding="utf-8") as fh:
+    with open(args.input, encoding="utf-8-sig") as fh:
         md = fh.read()
 
     lang = args.lang or detect_lang(md)
     title = args.title or os.path.splitext(os.path.basename(args.input))[0]
-    doc, tex = build_document(md, title, args.subtitle, lang, resolved)
+    doc, tex, images = build_document(md, title, args.subtitle, lang, resolved)
 
     out_pdf = os.path.abspath(args.output)
     os.makedirs(os.path.dirname(out_pdf) or ".", exist_ok=True)
@@ -753,6 +789,9 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return 5
 
+    if images:
+        print(f"warning: {images} image reference(s) cannot be embedded; "
+              "they are printed as [image: alt] markers", file=sys.stderr)
     if tex.unknown:
         names = ", ".join(sorted(tex.unknown))
         print(f"warning: {len(tex.unknown)} unsupported TeX command(s) kept verbatim: {names}",

@@ -74,7 +74,7 @@ class DeliveryContractTests(unittest.TestCase):
         with open(SCRIPT, encoding="utf-8") as fh:
             source = fh.read()
         imports = set(re.findall(r"^\s*(?:import|from)\s+([a-zA-Z_][\w.]*)", source, re.M))
-        allowed = {"os", "re", "sys", "shutil", "subprocess", "argparse", "__future__"}
+        allowed = {"os", "re", "sys", "shutil", "subprocess", "argparse", "time", "__future__"}
         self.assertTrue(imports <= allowed, f"non-stdlib imports: {imports - allowed}")
 
     def test_manifest_is_spec_legal(self):
