@@ -42,7 +42,7 @@ node scripts/md2pdf.js --doctor
   READY    node scripts/md2pdf.js in.md out.pdf
 ```
 
-Only the three `+` lines block you. **No browser?** `typst compile scripts/typst-template.typ out.pdf` needs neither Node nor Chromium (templates for Chinese and English are included).
+Only the three `+` lines block you. **No browser?** `typst compile scripts/typst-template.typ out.pdf` needs neither Node nor Chromium (templates for Chinese and English are included). For a report without math, generate the `.typ` first: `python3 scripts/md2typst.py in.md out.typ`.
 
 ## 3. Convert
 

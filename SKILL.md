@@ -113,6 +113,18 @@ See [`references/no-chromium.md`](references/no-chromium.md) — a measured rout
 Android/Linux containers using a single static Typst binary, including the font
 package, the `leading` conversion and the six Typst-specific traps.
 
+For a report **without math**, don't hand-roll the conversion — one command:
+
+```bash
+python3 scripts/md2typst.py 报告.md 报告.typ --check   # then typst compile 报告.typ 报告.pdf
+```
+
+`--indent h` for Typst < 0.13, plus `--keep-fullwidth`, `--no-title-break`,
+`--template`. It fixes the five non-formula traps a hand-rolled script silently
+ships (demo body leak, full-width digits spaced one by one, h1 broken mid-word,
+indent lost after a heading, `**bold**` line leaking into body text); each is a
+test in `tests/test_md2typst.py`.
+
 ## Pitfalls
 
 [`references/gotchas.md`](references/gotchas.md) — 32 numbered items, all measured:

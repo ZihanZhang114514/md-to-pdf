@@ -84,6 +84,7 @@ if (process.argv[2] === '--doctor' || process.argv[2] === '--selftest') {
 
   const pyCmd = ['python3', 'python'].find((c) => runQuiet(c, ['-c', 'import pymupdf']).ok);
   const pyVer = pyCmd ? runQuiet(pyCmd, ['-c', 'import pymupdf;print(pymupdf.__version__)']).out : '';
+  const hasMd2typst = fs.existsSync(path.join(__dirname, 'md2typst.py'));
   const typstBin = findInPath('typst') || ['/usr/local/bin/typst', '/opt/homebrew/bin/typst'].find((p) => fs.existsSync(p));
   const fc = runQuiet('fc-list', [':lang=zh']);
   const cjkFaces = fc.ok ? fc.out.split('\n').filter(Boolean).length : null;
@@ -95,6 +96,7 @@ if (process.argv[2] === '--doctor' || process.argv[2] === '--selftest') {
     ['browser', browser ? 'ok' : 'not found', browser || 'set MD2PDF_EDGE, install Chrome, or use the Typst templates', !!browser],
     ['python + pymupdf', pyCmd ? 'ok' : 'optional', pyCmd ? `${pyCmd} / pymupdf ${pyVer}` : 'page numbers will be skipped; pip install -r scripts/requirements.txt', false],
     ['typst (fallback)', typstBin ? 'available' : 'absent', typstBin || 'optional: needed only when there is no browser', false],
+    ['md2typst.py', hasMd2typst ? 'ok' : 'missing', hasMd2typst ? 'no-math reports: python3 scripts/md2typst.py in.md out.typ' : 're-clone the repo, the script ships with it', false],
     ['CJK fonts', cjkFaces ? 'ok' : 'unknown', cjkFaces ? `${cjkFaces} Chinese faces` : 'fc-list not available (normal on macOS/Windows)', false],
     ['platform', 'info', `${process.platform} ${process.arch}`, false],
   ];
@@ -112,7 +114,10 @@ if (process.argv[2] === '--doctor' || process.argv[2] === '--selftest') {
   console.log(ready
     ? '  READY    node scripts/md2pdf.js in.md out.pdf'
     : '  NOT READY   fix the lines above, then run this again');
-  if (!browser) console.log('  no browser?   typst compile scripts/typst-template.typ out.pdf');
+  if (!browser) {
+    console.log('  no browser?   typst compile scripts/typst-template.typ out.pdf');
+    console.log('  no math?      python3 scripts/md2typst.py in.md /tmp/out.typ  (then typst compile)');
+  }
   console.log('');
   process.exit(ready ? 0 : 1);
 }
