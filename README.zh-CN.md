@@ -148,6 +148,7 @@ scripts/
 Android 手机上的 Ubuntu 容器里没有 Edge/Chrome，snap 也跑不起来；WeasyPrint 也不是替代品（它按 `ex` 换算 MathJax 的 SVG，行内分式会压住正文）。这种情况用自带的中英文 Typst 模板：一个 48 MB 静态二进制，数学排版与 LaTeX 同级，全程离线。
 
 ```sh
+python3 scripts/md2typst.py 报告.md /tmp/报告.typ      # 无公式报告：MD → Typst，坑都替你别了
 typst compile scripts/typst-template.typ    /sdcard/report-zh.pdf
 typst compile scripts/typst-template-en.typ /sdcard/report-en.pdf
 ```

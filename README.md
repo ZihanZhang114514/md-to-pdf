@@ -106,6 +106,9 @@ python scripts/pdf_pages.py report.pdf preview 140
 > makes inline fractions overlap the body text. Use the bundled Typst fallback
 > instead: one 48 MB static binary, LaTeX-class maths, fully offline.
 > `typst compile scripts/typst-template.typ /sdcard/report.pdf` — see the "No Chromium" section of SKILL.md.
+> A report **without math** should not be hand-converted: `python3 scripts/md2typst.py in.md out.typ`
+> fixes the five non-formula traps (template body leak, full-width digits, h1 broken mid-word,
+> indent lost after a heading, bold-only line leaking into body text).
 
 ## Examples
 
